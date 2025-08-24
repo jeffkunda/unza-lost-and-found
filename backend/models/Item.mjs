@@ -29,10 +29,10 @@ const itemSchema = new mongoose.Schema(
     claimed: {
       type: Boolean,
       default: false,
-    },
+    }
   },
   {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 

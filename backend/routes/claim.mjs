@@ -45,4 +45,38 @@ router.get('/', verifyToken, permit('admin'), async (req, res) => {
   }
 });
 
+router.delete('/:id', verifyToken, permit('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid claim ID' });
+    }
+
+    const claim = await Claim.findByIdAndDelete(id);
+    if (!claim) {
+      return res.status(404).json({ message: 'Claim not found' });
+    }
+
+    res.json({ message: 'Claim deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+router.patch('/:id/reject', verifyToken, permit('admin'), async (req, res) => {
+  try {
+    const claim = await Claim.findById(req.params.id);
+    if (!claim) return res.status(404).json({ message: 'Claim not found' });
+    
+    // Update item's claimed status
+    await Item.findByIdAndUpdate(claim.item, { claimed: false });
+    
+    // Delete or update the claim
+    await Claim.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Claim rejected and item made available again' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 export default router;

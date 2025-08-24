@@ -7,6 +7,7 @@ import replyRoutes from './routes/replies.mjs';
 import userRoutes from './routes/user.mjs';
 import itemRoutes from './routes/item.mjs';
 import claimRoutes from './routes/claim.mjs';
+import returnRoutes from './routes/returns.mjs'
 
 dotenv.config();
 const app = express();
@@ -20,6 +21,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/replies', replyRoutes); // ✅ ensure this path is correct
+app.use('/api/returns', returnRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
