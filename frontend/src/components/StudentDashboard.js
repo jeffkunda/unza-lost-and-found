@@ -13,6 +13,7 @@ const StudentDashboard = ({ logout, token }) => {
   const [loading, setLoading] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showPostForm, setShowPostForm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // State for the enlarged image
 
   const fetchItems = async (query = '') => {
     setLoading(true);
@@ -24,7 +25,12 @@ const StudentDashboard = ({ logout, token }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setItems(res.data);
+      // Sort items by createdAt date in descending order (newest first)
+      const sortedItems = res.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      setItems(sortedItems);
     } catch (error) {
       console.error(error);
       alert('Failed to fetch items');
@@ -51,6 +57,16 @@ const StudentDashboard = ({ logout, token }) => {
     setClaimingItem(null);
   };
 
+  // Function to open image in larger view
+  const openImageModal = (imageUrl, title) => {
+    setSelectedImage({ imageUrl, title });
+  };
+
+  // Function to close image modal
+  const closeImageModal = () => {
+    setSelectedImage(null);
+  };
+
   if (showMessages) {
     return (
       <>
@@ -70,20 +86,19 @@ const StudentDashboard = ({ logout, token }) => {
       />
 
       <div className="dashboard-form-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
-  <div className="dashboard-form-container">
-    <form onSubmit={handleSearch} className="search-form">
-      <input
-        type="text"
-        placeholder="Search for lost/found item"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="search-input"
-      />
-      <button type="submit" className="search-button">Search</button>
-    </form>
-  </div>
-</div>
-
+        <div className="dashboard-form-container">
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              placeholder="Search for lost/found item"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="search-button">Search</button>
+          </form>
+        </div>
+      </div>
 
       {showPostForm && (
         <PostItemModal
@@ -93,11 +108,11 @@ const StudentDashboard = ({ logout, token }) => {
         />
       )}
 
-     <div style={{ width: '100%', borderTop: '1px solid #ccc', marginBottom: '10px' }}>
-  <h3 style={{ display: 'flex', justifyContent: 'center', margin: 0, paddingBottom: '8px' }}>
-    Reported Items
-  </h3>
-</div>
+      <div style={{ width: '100%', borderTop: '1px solid #ccc', marginBottom: '10px' }}>
+        <h3 style={{ display: 'flex', justifyContent: 'center', margin: 0, paddingBottom: '8px' }}>
+          Reported Items
+        </h3>
+      </div>
 
       {loading ? (
         <p>Loading...</p>
@@ -112,21 +127,22 @@ const StudentDashboard = ({ logout, token }) => {
                     src={`http://localhost:5000${item.imageUrl}`}
                     alt={item.title}
                     className="item-image"
+                    onClick={() => openImageModal(`http://localhost:5000${item.imageUrl}`, item.title)}
+                    style={{ cursor: 'pointer' }}
                   />
                 )}
                 {item.title}{' '}
                 {item.claimed && <span className="claimed-tag">(Claimed)</span>}
               </h4>
               <p><strong>Found at:</strong> {item.locationFound}</p>
-            
-              {!item.claimed && (
-                <button
-                  onClick={() => setClaimingItem(item)}
-                  className="claim-button"
-                >
-                  Claim this item
-                </button>
-              )}
+              
+              <button
+                onClick={() => !item.claimed && setClaimingItem(item)}
+                className={`claim-button ${item.claimed ? 'claimed-button' : ''}`}
+                disabled={item.claimed}
+              >
+                {item.claimed ? 'Already Claimed' : 'Claim this item'}
+              </button>
             </div>
           ))}
         </div>
@@ -139,6 +155,17 @@ const StudentDashboard = ({ logout, token }) => {
           onClose={() => setClaimingItem(null)}
           onSuccess={handleClaimSuccess}
         />
+      )}
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="image-modal" onClick={closeImageModal}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <span className="close-button" onClick={closeImageModal}>&times;</span>
+            <img src={selectedImage.imageUrl} alt={selectedImage.title} className="enlarged-image" />
+            <p className="image-title">{selectedImage.title}</p>
+          </div>
+        </div>
       )}
     </div>
   );

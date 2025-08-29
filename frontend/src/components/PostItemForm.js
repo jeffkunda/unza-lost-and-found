@@ -10,7 +10,7 @@ const PostItemForm = ({ token, onSuccess }) => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!title || !locationFound || !contactInfo) {
+    if (!title || !locationFound || !contactInfo || !image) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -19,7 +19,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       formData.append('title', title);
       formData.append('locationFound', locationFound);
       formData.append('contactInfo', contactInfo);
-      if (image) formData.append('image', image);
+      formData.append('image', image);
 
       await axios.post('http://localhost:5000/api/items', formData, {
         headers: {
@@ -44,7 +44,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-        <label>What did you find? *</label><br />
+        <label>What did you find? </label><br />
         <input
           type="text"
           value={title}
@@ -54,7 +54,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       </div>
 
       <div>
-        <label>Where did you find it? *</label><br />
+        <label>Where did you find it? </label><br />
         <input
           type="text"
           value={locationFound}
@@ -64,7 +64,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       </div>
 
       <div>
-        <label>Phone number *</label><br />
+        <label>Phone number </label><br />
         <input
           type="text"
           value={contactInfo}
@@ -74,12 +74,18 @@ const PostItemForm = ({ token, onSuccess }) => {
       </div>
 
       <div>
-        <label>Image</label><br />
+        <label>Image </label><br />
         <input
           type="file"
           accept="image/*"
           onChange={e => setImage(e.target.files[0])}
+          required
         />
+      </div>
+     
+      <div>
+        <label > <span style={{ color: "red", fontWeight: "bold" }}>Important:</span>  After posting a found item, please deliver it to UNZA 
+        Security for safekeeping.</label>
       </div>
 
       <button type="submit">Post Item</button>

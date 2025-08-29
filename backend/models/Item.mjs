@@ -19,7 +19,7 @@ const itemSchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      default: null,
+      required: [true, 'Image is required'], // Changed from default: null to required
     },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,

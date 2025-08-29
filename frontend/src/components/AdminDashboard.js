@@ -17,6 +17,7 @@ const AdminDashboard = ({ logout, token }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [returnedCount, setReturnedCount] = useState(0);
   const [returns, setReturns] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null); // State for the enlarged image
 
   const fetchAllData = async () => {
     try {
@@ -38,9 +39,20 @@ const AdminDashboard = ({ logout, token }) => {
         })
       ]);
 
-      setItems(itemsRes.data);
+      // Sort items by createdAt date in descending order (newest first)
+      const sortedItems = itemsRes.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      setItems(sortedItems);
       setClaims(claimsRes.data);
-      setReturns(returnsRes.data);
+      
+      // Sort returns by approvedAt date in descending order (newest first)
+      const sortedReturns = returnsRes.data.sort((a, b) => 
+        new Date(b.approvedAt) - new Date(a.approvedAt)
+      );
+      setReturns(sortedReturns);
+      
       setReturnedCount(countRes.data.count);
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -68,21 +80,22 @@ const AdminDashboard = ({ logout, token }) => {
       fetchAllData();
     }
   };
+  
   const handleRejectClaim = async (claimId, itemId) => {
-  try {
-    await axios.patch(`http://localhost:5000/api/claims/${claimId}/reject`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    // Update local state
-    setClaims(prev => prev.filter(c => c._id !== claimId));
-    setItems(prev => prev.map(item => 
-      item._id === itemId ? { ...item, claimed: false } : item
-    ));
-  } catch (err) {
-    console.error('Failed to reject claim:', err);
-  }
-};
+    try {
+      await axios.patch(`http://localhost:5000/api/claims/${claimId}/reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setClaims(prev => prev.filter(c => c._id !== claimId));
+      setItems(prev => prev.map(item => 
+        item._id === itemId ? { ...item, claimed: false } : item
+      ));
+    } catch (err) {
+      console.error('Failed to reject claim:', err);
+    }
+  };
 
   const handleApproveClaim = async (itemId, claimId) => {
     try {
@@ -112,6 +125,8 @@ const AdminDashboard = ({ logout, token }) => {
 
       setItems(prev => prev.filter(item => item._id !== itemId));
       setClaims(prev => prev.filter(claim => claim._id !== claimId));
+      
+      // Add new return to the beginning of the array
       setReturns(prev => [returnResponse.data, ...prev]);
       setReturnedCount(prev => prev + 1);
     } catch (err) {
@@ -162,6 +177,16 @@ const AdminDashboard = ({ logout, token }) => {
     setViewingReturns(false);
   };
 
+  // Function to open image in larger view
+  const openImageModal = (imageUrl, title) => {
+    setSelectedImage({ imageUrl, title });
+  };
+
+  // Function to close image modal
+  const closeImageModal = () => {
+    setSelectedImage(null);
+  };
+
   return (
     <div className="dashboard-container admin-dashboard-container">
       <Navbar
@@ -195,6 +220,8 @@ const AdminDashboard = ({ logout, token }) => {
                         src={item.imageUrl ? `http://localhost:5000${item.imageUrl}` : 'https://via.placeholder.com/100'}
                         alt={item.title}
                         style={imageStyle}
+                        onClick={() => item.imageUrl && openImageModal(`http://localhost:5000${item.imageUrl}`, item.title)}
+                        className={item.imageUrl ? "clickable-image" : ""}
                       />
                     </div>
                     <div style={cardContentStyle}>
@@ -221,6 +248,12 @@ const AdminDashboard = ({ logout, token }) => {
       ) : viewingClaims ? (
         <>
           <h2 className="dashboard-section-title">Submitted Claims</h2>
+          {claims.filter(claim => claim.item).length > 0 && (
+            <label>
+              <span style={{ color: "red", fontWeight: "bold" }}>Important:</span>
+              Only click the Approve button after the item has been physically handed over to the verified owner.
+            </label>
+          )}
           {loadingClaims ? (
             <p>Loading claims...</p>
           ) : (
@@ -235,12 +268,14 @@ const AdminDashboard = ({ logout, token }) => {
                         src={claim.item.imageUrl ? `http://localhost:5000${claim.item.imageUrl}` : 'https://via.placeholder.com/100'}
                         alt={claim.item.title}
                         style={imageStyle}
+                        onClick={() => claim.item.imageUrl && openImageModal(`http://localhost:5000${claim.item.imageUrl}`, claim.item.title)}
+                        className={claim.item.imageUrl ? "clickable-image" : ""}
                       />
                     </div>
                     <div style={cardContentStyle}>
                       <div style={cardTextStyle}>
                         <h4>{claim.item.title}</h4>
-                        <p><strong>Description:</strong> {claim.detail}</p>
+                        <p><strong>Unique Description:</strong> {claim.detail}</p>
                         <p><strong>Student ID:</strong> {claim.studentId}</p>
                         <p><strong>Contact:</strong> {claim.phone}</p>
                       </div>
@@ -250,15 +285,15 @@ const AdminDashboard = ({ logout, token }) => {
                           onClick={() => handleApproveClaim(claim.item._id, claim._id)}
                           style={{ marginRight: '10px' }}
                         >
-                          Approve Return
+                          Approve
                         </button>
                         <button
-  className="reject-button"
-  onClick={() => handleRejectClaim(claim._id, claim.item._id)}
-  style={{ marginRight: '10px' }}
->
-  Reject Claim
-</button>
+                          className="reject-button"
+                          onClick={() => handleRejectClaim(claim._id, claim.item._id)}
+                          style={{ marginRight: '10px' }}
+                        >
+                          Reject Claim
+                        </button>
                         <button
                           className="reply-button"
                           onClick={() => handleReply(claim)}
@@ -308,6 +343,17 @@ const AdminDashboard = ({ logout, token }) => {
         />
       )}
 
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="image-modal" onClick={closeImageModal}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <span className="close-button" onClick={closeImageModal}>&times;</span>
+            <img src={selectedImage.imageUrl} alt={selectedImage.title} className="enlarged-image" />
+            <p className="image-title">{selectedImage.title}</p>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .return-history-section {
           margin-top: 40px;
@@ -325,7 +371,7 @@ const AdminDashboard = ({ logout, token }) => {
         
         .return-history-card {
           background: white;
-          border-radius: 8px;
+          border-radius: '8px';
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           overflow: hidden;
           transition: transform 0.2s;

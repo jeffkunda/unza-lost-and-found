@@ -48,7 +48,7 @@ const ClaimForm = ({ token, item, onClose, onSuccess }) => {
           <textarea
             value={detail}
             onChange={e => setDetail(e.target.value)}
-            placeholder="Mention specific marks, colors, engravings, or other details that would help confirm it's yours."
+            placeholder="Mention specific marks, colors, engravings, or other details that confirm it's yours. If the item is an ID, simply state 'This is my ID'."
             required
             rows="3"
           />
@@ -71,7 +71,7 @@ const ClaimForm = ({ token, item, onClose, onSuccess }) => {
 
           <button type="submit" disabled={submitting}>
             {submitting ? 'Submitting...' : 'Submit Claim'}
-          </button>
+          </button>{" "}
           <button type="log-ou" onClick={onClose}>
             Cancel
           </button>
