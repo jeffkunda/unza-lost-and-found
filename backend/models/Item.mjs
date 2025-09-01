@@ -19,7 +19,12 @@ const itemSchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      required: [true, 'Image is required'], // Changed from default: null to required
+      required: [true, 'Image is required'],
+    },
+    category: {
+      type: String,
+      required: [true, 'Category is required'],
+      enum: ['electronics', 'clothing', 'bag', 'id', 'studentid', 'wallet', 'keys'],
     },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,

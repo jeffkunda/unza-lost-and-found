@@ -5,12 +5,13 @@ const PostItemForm = ({ token, onSuccess }) => {
   const [title, setTitle] = useState('');
   const [locationFound, setLocationFound] = useState('');
   const [contactInfo, setContactInfo] = useState('');
+  const [category, setCategory] = useState('');
   const [image, setImage] = useState(null);
   const [error, setError] = useState('');
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!title || !locationFound || !contactInfo || !image) {
+    if (!title || !locationFound || !contactInfo || !category || !image) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -19,6 +20,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       formData.append('title', title);
       formData.append('locationFound', locationFound);
       formData.append('contactInfo', contactInfo);
+      formData.append('category', category);
       formData.append('image', image);
 
       await axios.post('http://localhost:5000/api/items', formData, {
@@ -31,6 +33,7 @@ const PostItemForm = ({ token, onSuccess }) => {
       setTitle('');
       setLocationFound('');
       setContactInfo('');
+      setCategory('');
       setImage(null);
       setError('');
       onSuccess();
@@ -51,6 +54,24 @@ const PostItemForm = ({ token, onSuccess }) => {
           onChange={e => setTitle(e.target.value)}
           required
         />
+      </div>
+
+      <div>
+        <label>Category </label><br />
+        <select
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          required
+        >
+          <option value="">Select Category</option>
+          <option value="electronics">Electronics</option>
+          <option value="clothing">Clothing</option>
+          <option value="bag">Bag</option>
+          <option value="id">ID/Documents</option>
+          <option value="studentid">Student ID</option>
+          <option value="wallet">Wallet</option>
+          <option value="keys">Keys</option>
+        </select>
       </div>
 
       <div>

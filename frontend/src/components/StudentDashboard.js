@@ -9,23 +9,43 @@ import '../App.css';
 const StudentDashboard = ({ logout, token }) => {
   const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [claimingItem, setClaimingItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showPostForm, setShowPostForm] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); // State for the enlarged image
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const fetchItems = async (query = '') => {
+  // Function to get the display text based on category
+  const getCategoryDisplayText = () => {
+    if (categoryFilter === 'electronics') return 'Reported Electronic Devices';
+    if (categoryFilter === 'clothing') return 'Reported Clothing Items';
+    if (categoryFilter === 'bag') return 'Reported Bags';
+    if (categoryFilter === 'id') return 'Reported ID/Documents';
+    if (categoryFilter === 'studentid') return 'Reported Student IDs';
+    if (categoryFilter === 'wallet') return 'Reported Wallets';
+    if (categoryFilter === 'keys') return 'Reported Keys';
+    return 'Reported Items'; // Default text
+  };
+
+  const fetchItems = async (query = '', category = '') => {
     setLoading(true);
     try {
-      let url = 'http://localhost:5000/api/items';
-      if (query) url += `/search?q=${encodeURIComponent(query)}`;
+      let url = 'http://localhost:5000/api/items/search';
+      const params = new URLSearchParams();
+      
+      if (query) params.append('q', query);
+      if (category) params.append('category', category);
+      
+      // Always use the search endpoint, even if no params
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
 
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Sort items by createdAt date in descending order (newest first)
       const sortedItems = res.data.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -44,7 +64,19 @@ const StudentDashboard = ({ logout, token }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchItems(searchQuery);
+    fetchItems(searchQuery, categoryFilter);
+  };
+
+  const handleCategoryClick = (category) => {
+    const newCategory = category === categoryFilter ? '' : category;
+    setCategoryFilter(newCategory);
+    fetchItems(searchQuery, newCategory);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('');
+    fetchItems();
   };
 
   const handlePostSuccess = () => {
@@ -57,12 +89,10 @@ const StudentDashboard = ({ logout, token }) => {
     setClaimingItem(null);
   };
 
-  // Function to open image in larger view
   const openImageModal = (imageUrl, title) => {
     setSelectedImage({ imageUrl, title });
   };
 
-  // Function to close image modal
   const closeImageModal = () => {
     setSelectedImage(null);
   };
@@ -85,18 +115,72 @@ const StudentDashboard = ({ logout, token }) => {
         onPostItem={() => setShowPostForm(!showPostForm)}
       />
 
-      <div className="dashboard-form-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
-        <div className="dashboard-form-container">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="Search for lost/found item"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">Search</button>
+      <div className="dashboard-form-wrapper" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+        <div className="dashboard-form-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <form onSubmit={handleSearch} className="search-form" style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', maxWidth: '500px', width: '100%' }}>
+              <input
+                type="text"
+                placeholder="Search for lost/found item"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+                style={{ flex: 1, marginRight: '10px' }}
+              />
+              <button type="submit" className="search-button">Search</button>
+            </div>
+            {(searchQuery || categoryFilter) && (
+              <button type="button" onClick={handleClearFilters} className="clear-button" style={{ marginLeft: '10px' }}>
+                Clear Filters
+              </button>
+            )}
           </form>
+          
+          {/* Category buttons row */}
+          <div className="category-buttons-container" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '10px', width: '100%' }}>
+            <button 
+              className={`category-button ${categoryFilter === 'electronics' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('electronics')}
+            >
+              Electronics
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'clothing' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('clothing')}
+            >
+              Clothing
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'bag' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('bag')}
+            >
+              Bags
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'id' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('id')}
+            >
+              ID/Documents
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'studentid' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('studentid')}
+            >
+              Student ID
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'wallet' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('wallet')}
+            >
+              Wallet
+            </button>
+            <button 
+              className={`category-button ${categoryFilter === 'keys' ? 'active' : ''}`}
+              onClick={() => handleCategoryClick('keys')}
+            >
+              Keys
+            </button>
+          </div>
         </div>
       </div>
 
@@ -110,15 +194,15 @@ const StudentDashboard = ({ logout, token }) => {
 
       <div style={{ width: '100%', borderTop: '1px solid #ccc', marginBottom: '10px' }}>
         <h3 style={{ display: 'flex', justifyContent: 'center', margin: 0, paddingBottom: '8px' }}>
-          Reported Items
+          {getCategoryDisplayText()}
         </h3>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <p style={{ textAlign: 'center' }}>Loading...</p>
       ) : (
         <div className="items-grid">
-          {items.length === 0 && <p>No items found.</p>}
+          {items.length === 0 && <p style={{ textAlign: 'center' }}>No items found.</p>}
           {items.map((item) => (
             <div key={item._id} className="item-card">
               <h4>

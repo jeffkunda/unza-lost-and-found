@@ -29,7 +29,14 @@ const upload = multer({ storage });
  */
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const items = await Item.find().populate('postedBy', 'username role');
+    const { category } = req.query;
+    let filter = {};
+    
+    if (category && ['electronics', 'clothing', 'bag', 'id', 'studentid', 'wallet', 'keys'].includes(category)) {
+      filter.category = category;
+    }
+    
+    const items = await Item.find(filter).populate('postedBy', 'username role');
     res.json(items);
   } catch (error) {
     console.error('❌ GET / error:', error);
@@ -38,14 +45,29 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 /**
- * ✅ GET: Search by title
+ * ✅ GET: Search by title and/or category
  */
 router.get('/search', verifyToken, async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q) return res.status(400).json({ message: 'Query required' });
+    const { q, category } = req.query;
+    
+    // If both q and category are empty, return all items
+    if (!q && !category) {
+      const items = await Item.find().populate('postedBy', 'username role');
+      return res.json(items);
+    }
 
-    const items = await Item.find({ title: new RegExp(q, 'i') });
+    let filter = {};
+    
+    if (q) {
+      filter.title = new RegExp(q, 'i');
+    }
+    
+    if (category && ['electronics', 'clothing', 'bag', 'id', 'studentid', 'wallet', 'keys'].includes(category)) {
+      filter.category = category;
+    }
+
+    const items = await Item.find(filter).populate('postedBy', 'username role');
     res.json(items);
   } catch (error) {
     console.error('❌ GET /search error:', error);
@@ -58,10 +80,14 @@ router.get('/search', verifyToken, async (req, res) => {
  */
 router.post('/', verifyToken, permit('student'), upload.single('image'), async (req, res) => {
   try {
-    const { title, locationFound, contactInfo } = req.body;
+    const { title, locationFound, contactInfo, category } = req.body;
 
-    if (!title?.trim() || !locationFound?.trim() || !contactInfo?.trim()) {
+    if (!title?.trim() || !locationFound?.trim() || !contactInfo?.trim() || !category) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    if (!['electronics', 'clothing', 'bag', 'id', 'studentid', 'wallet', 'keys'].includes(category)) {
+      return res.status(400).json({ message: 'Invalid category' });
     }
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -70,6 +96,7 @@ router.post('/', verifyToken, permit('student'), upload.single('image'), async (
       title: title.trim(),
       locationFound: locationFound.trim(),
       contactInfo: contactInfo.trim(),
+      category,
       imageUrl,
       postedBy: req.user.id
     });

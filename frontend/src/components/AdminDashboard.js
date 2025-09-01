@@ -17,7 +17,7 @@ const AdminDashboard = ({ logout, token }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [returnedCount, setReturnedCount] = useState(0);
   const [returns, setReturns] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null); // State for the enlarged image
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const fetchAllData = async () => {
     try {
@@ -39,7 +39,6 @@ const AdminDashboard = ({ logout, token }) => {
         })
       ]);
 
-      // Sort items by createdAt date in descending order (newest first)
       const sortedItems = itemsRes.data.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -47,7 +46,6 @@ const AdminDashboard = ({ logout, token }) => {
       setItems(sortedItems);
       setClaims(claimsRes.data);
       
-      // Sort returns by approvedAt date in descending order (newest first)
       const sortedReturns = returnsRes.data.sort((a, b) => 
         new Date(b.approvedAt) - new Date(a.approvedAt)
       );
@@ -87,7 +85,6 @@ const AdminDashboard = ({ logout, token }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Update local state
       setClaims(prev => prev.filter(c => c._id !== claimId));
       setItems(prev => prev.map(item => 
         item._id === itemId ? { ...item, claimed: false } : item
@@ -126,7 +123,6 @@ const AdminDashboard = ({ logout, token }) => {
       setItems(prev => prev.filter(item => item._id !== itemId));
       setClaims(prev => prev.filter(claim => claim._id !== claimId));
       
-      // Add new return to the beginning of the array
       setReturns(prev => [returnResponse.data, ...prev]);
       setReturnedCount(prev => prev + 1);
     } catch (err) {
@@ -177,12 +173,10 @@ const AdminDashboard = ({ logout, token }) => {
     setViewingReturns(false);
   };
 
-  // Function to open image in larger view
   const openImageModal = (imageUrl, title) => {
     setSelectedImage({ imageUrl, title });
   };
 
-  // Function to close image modal
   const closeImageModal = () => {
     setSelectedImage(null);
   };

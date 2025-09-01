@@ -478,3 +478,57 @@ body {
 .item-image:hover {
   transform: scale(1.05);
 }
+/* Category buttons container */
+.category-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+/* Category buttons */
+.category-button {
+  padding: 8px 12px;
+  color: black;
+  background-color: transparent;
+  border: 1px solid transparent; /* Add transparent border to maintain layout */
+  border-bottom: 1px solid transparent; /* Specific transparent bottom border */
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.category-button:hover {
+  background-color: transparent;
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.category-button.active {
+  background-color: transparent;
+  border-color: #6c757d;
+  
+}
+
+/* Category badges */
+.item-category-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  background-color: #f0f0f0;
+}
+
+.clear-button {
+  color: black;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.clear-button:hover {
+  background-color: #e0e0e0;
+}
