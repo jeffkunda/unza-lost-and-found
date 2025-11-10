@@ -27,7 +27,7 @@ A modern, full-stack web application designed to solve the problem of lost and f
 ---
 
 ## Live Demo
-Coming soon! The system is prepared for university-wide deployment.
+Coming soon! 
 
 ---
 
